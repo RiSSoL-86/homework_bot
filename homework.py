@@ -65,14 +65,11 @@ def check_response(response):
     logging.info('Начинаем проверку API-ответа сервера!')
     if not isinstance(response, dict):
         raise TypeError('API структура данных не соответствует заданной')
-    homeworks = response.get('homeworks')
-    if not homeworks and homeworks != []:
-        # Михаил, так а если ключ 'homeworks' есть и его значение [ ] то я же
-        # попаду в эту ветку, такого же не должно быть.
-        # А на [ ] я проверяю на 120 строке, разве не?
+    if 'homeworks' not in response:
         raise KeyError('В API-ответе, ключ - "homeworks" отсутствует')
-    if not response.get('current_date'):
+    if 'current_date' not in response:
         raise KeyError('В API-ответе, ключ - "current_date" отсутствует')
+    homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
         raise TypeError('Полученная структура данных "homeworks" не '
                         'соответствует заданной')
