@@ -74,7 +74,7 @@ def check_response(response):
         raise TypeError('Полученная структура данных "homeworks" не '
                         'соответствует заданной')
     logging.info('Проверку API-ответа сервера успешна!')
-    return response.get('homeworks')
+    return homeworks
 
 
 def parse_status(homework):
