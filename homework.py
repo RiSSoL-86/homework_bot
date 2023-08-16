@@ -9,8 +9,7 @@ import telegram
 from telegram.error import TelegramError
 from dotenv import load_dotenv
 
-from exceptions import (TokensError, URLError, KeyError, HomeworksError,
-                        HomeworkStatusError)
+from exceptions import TokensError, URLError, KeyError, HomeworkStatusError
 
 load_dotenv()
 
@@ -39,10 +38,7 @@ def check_tokens():
     Которые необходимы для работы программы.
     """
     source = ("PRACTICUM_TOKEN", "TELEGRAM_TOKEN", "TELEGRAM_CHAT_ID")
-    token_list = []
-    for token in source:
-        if not globals()[token]:
-            token_list.append(token)
+    token_list = [token for token in source if not globals()[token]]
     if token_list:
         text_error = f'''Для дальнейшей работы программы Вам необходимо
         предоставить следующие tokens: {" ".join(token_list)}'''
@@ -66,16 +62,18 @@ def get_api_answer(timestamp):
 
 def check_response(response):
     """Проверяет ответ API на соответствие."""
-    print(response)
     logging.info('Начинаем проверку API-ответа сервера!')
     if not isinstance(response, dict):
         raise TypeError('API структура данных не соответствует заданной')
     homeworks = response.get('homeworks')
     if not homeworks and homeworks != []:
+        # Михаил, так а если ключ 'homeworks' есть и его значение [ ] то я же
+        # попаду в эту ветку, такого же не должно быть.
+        # А на [ ] я проверяю на 120 строке, разве не?
         raise KeyError('В API-ответе, ключ - "homeworks" отсутствует')
     if not response.get('current_date'):
         raise KeyError('В API-ответе, ключ - "current_date" отсутствует')
-    if not isinstance(response.get('homeworks'), list):
+    if not isinstance(homeworks, list):
         raise TypeError('Полученная структура данных "homeworks" не '
                         'соответствует заданной')
     logging.info('Проверку API-ответа сервера успешна!')
@@ -87,10 +85,10 @@ def parse_status(homework):
     logging.info('Начинаем проверку статуса домашней работы!')
     homework_name = homework.get('homework_name')
     if not homework_name:
-        raise KeyError('Домашние работы для проверки отсутствуют')
+        raise KeyError('Ключ "homework_name" отсутствует')
     status = homework.get('status')
     if not status:
-        raise HomeworkStatusError('Статус домашней работы отсутствует')
+        raise KeyError('Ключ "status" отсутствует')
     verdict = HOMEWORK_VERDICTS.get(status)
     if not verdict:
         raise HomeworkStatusError('Неизвестный статус домашней работы')
@@ -121,9 +119,9 @@ def main():
             homework = check_response(response)
             if not homework:
                 logging.debug('Нет новых статусов у работ')
-                raise HomeworksError('Нет новых статусов у работ')
-            homework_status = parse_status(homework[0])
-            send_message(bot, homework_status)
+            else:
+                homework_status = parse_status(homework[0])
+                send_message(bot, homework_status)
             timestamp = response['current_date']
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
